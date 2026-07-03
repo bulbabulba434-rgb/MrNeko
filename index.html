@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>MrNeko // CODER</title>
+<style>
+  :root {
+    --primary: #00ff9d;
+    --secondary: #ff3ea5;
+    --bg: #0a0a0a;
+  }
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'Courier New', monospace;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+    perspective: 1500px;
+  }
+  
+  #matrix {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.25;
+  }
+  
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 60;
+    pointer-events: none;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 255, 157, 0.02);
+    pointer-events: none;
+    z-index: 3;
+    animation: flicker 0.15s infinite;
+  }
+  
+  @keyframes flicker {
+    0% { opacity: 0.3; } 50% { opacity: 0.5; } 100% { opacity: 0.3; }
+  }
+  
+  /* BOOT */
+  .boot-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 60px;
+    color: var(--primary);
+    font-size: 14px;
+    line-height: 1.8;
+    transition: opacity 0.8s;
+  }
+  .boot-screen.hide { opacity: 0; pointer-events: none; }
+  .boot-line { opacity: 0; text-shadow: 0 0 8px var(--primary); }
+  .boot-line.show { opacity: 1; }
+  .boot-line.warn { color: #ffaa00; text-shadow: 0 0 8px #ffaa00; }
+  .boot-line.error { color: var(--secondary); text-shadow: 0 0 8px var(--secondary); }
+  .boot-cursor { display: inline-block; animation: blink 0.8s infinite; }
+  .boot-progress {
+    margin-top: 20px; width: 300px; height: 8px;
+    border: 1px solid var(--primary); opacity: 0; transition: opacity 0.3s;
+  }
+  .boot-progress.show { opacity: 1; }
+  .boot-progress-bar {
+    height: 100%; background: var(--primary); width: 0;
+    box-shadow: 0 0 10px var(--primary);
+    animation: fillBar 3s linear forwards;
+  }
+  @keyframes fillBar { to { width: 100%; } }
+  
+  /* ЧАСЫ */
+  .clock-widget {
+    position: fixed;
+    top: 20px; left: 20px;
+    z-index: 50;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid var(--primary);
+    padding: 15px 20px;
+    color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+    opacity: 0;
+    animation: cardAppear 1s 3.8s forwards;
+    min-width: 220px;
+  }
+  .clock-header {
+    font-size: 10px; color: var(--secondary); letter-spacing: 2px;
+    margin-bottom: 8px; text-shadow: 0 0 5px var(--secondary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .clock-dot {
+    width: 8px; height: 8px; background: var(--secondary);
+    border-radius: 50%; box-shadow: 0 0 8px var(--secondary);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .clock-time {
+    font-size: 28px; letter-spacing: 3px;
+    text-shadow: 0 0 10px var(--primary);
+    margin-bottom: 5px; font-weight: bold;
+  }
+  .clock-time .sep { animation: blink 1s infinite; color: var(--secondary); }
+  .clock-date { font-size: 11px; opacity: 0.8; letter-spacing: 1px; margin-bottom: 8px; }
+  .clock-uptime {
+    font-size: 10px; color: var(--secondary); opacity: 0.7;
+    letter-spacing: 1px; border-top: 1px solid rgba(0, 255, 157, 0.3);
+    padding-top: 6px; margin-top: 6px;
+  }
+  
+  /* GEO */
+  .geo-widget {
+    position: fixed;
+    top: 20px; right: 20px;
+    z-index: 50;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid var(--primary);
+    padding: 15px 20px;
+    color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+    opacity: 0;
+    animation: cardAppear 1s 3.9s forwards;
+    min-width: 240px;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .geo-header {
+    font-size: 10px; color: var(--secondary); letter-spacing: 2px;
+    margin-bottom: 10px; text-shadow: 0 0 5px var(--secondary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .geo-item span { color: var(--secondary); }
+  
+  /* ТЕМЫ */
+  .theme-switcher {
+    position: fixed;
+    bottom: 20px; left: 20px;
+    z-index: 50;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid var(--primary);
+    padding: 12px 15px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+    opacity: 0;
+    animation: cardAppear 1s 4s forwards;
+  }
+  .theme-label {
+    font-size: 10px; color: var(--secondary); letter-spacing: 2px;
+    margin-right: 5px;
+  }
+  .theme-btn {
+    width: 22px; height: 22px;
+    border: 1px solid rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .theme-btn:hover { transform: scale(1.2); border-color: white; }
+  .theme-btn.active { border-color: white; box-shadow: 0 0 10px currentColor; }
+  
+  /* КАРТОЧКА (широкая) */
+  .card-wrapper {
+    position: relative;
+    z-index: 5;
+    transform-style: preserve-3d;
+    transition: transform 0.1s;
+    opacity: 0;
+    animation: cardAppear 1s 3.5s forwards;
+  }
+  @keyframes cardAppear {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  
+  .broken-wrapper {
+    position: relative;
+  }
+  
+  .card {
+    width: 100%;
+    max-width: 780px;
+    border: 1px solid var(--primary);
+    padding: 50px 60px;
+    text-align: center;
+    background: rgba(10, 10, 10, 0.85);
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.3), inset 0 0 30px rgba(0, 255, 157, 0.05);
+    animation: cardGlow 3s infinite;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+  @keyframes cardGlow {
+    0%,100% { box-shadow: 0 0 20px rgba(0, 255, 157, 0.3), inset 0 0 30px rgba(0, 255, 157, 0.05); }
+    50% { box-shadow: 0 0 35px rgba(255, 62, 165, 0.4), inset 0 0 30px rgba(0, 255, 157, 0.1); }
+  }
+  
+  /* ГЛИТЧ-ТРЕЩИНЫ СВЕРХУ И СНИЗУ */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: -15px;
+    right: -15px;
+    height: 24px;
+    background-image: 
+      linear-gradient(90deg, 
+        transparent 10%, var(--primary) 10%, var(--primary) 12%, transparent 12%,
+        transparent 25%, var(--secondary) 25%, var(--secondary) 26%, transparent 26%,
+        transparent 45%, var(--primary) 45%, var(--primary) 47%, transparent 47%,
+        transparent 60%, var(--secondary) 60%, var(--secondary) 61%, transparent 61%,
+        transparent 75%, var(--primary) 75%, var(--primary) 76%, transparent 76%,
+        transparent 90%, var(--secondary) 90%, var(--secondary) 92%, transparent 92%);
+    clip-path: polygon(
+      0% 50%, 5% 30%, 10% 60%, 15% 20%, 22% 70%, 28% 10%, 
+      35% 65%, 42% 25%, 50% 80%, 58% 15%, 65% 60%, 72% 30%, 
+      80% 75%, 87% 20%, 93% 65%, 100% 40%, 100% 100%, 0% 100%
+    );
+    opacity: 0.7;
+    animation: glitchTop 2s infinite;
+    pointer-events: none;
+  }
+  
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: -15px;
+    right: -15px;
+    height: 24px;
+    background-image: 
+      linear-gradient(90deg, 
+        transparent 5%, var(--secondary) 5%, var(--secondary) 7%, transparent 7%,
+        transparent 20%, var(--primary) 20%, var(--primary) 21%, transparent 21%,
+        transparent 40%, var(--secondary) 40%, var(--secondary) 42%, transparent 42%,
+        transparent 55%, var(--primary) 55%, var(--primary) 56%, transparent 56%,
+        transparent 70%, var(--secondary) 70%, var(--secondary) 71%, transparent 71%,
+        transparent 85%, var(--primary) 85%, var(--primary) 87%, transparent 87%);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 50%, 93% 30%, 87% 70%, 80% 15%, 
+      72% 60%, 65% 25%, 58% 75%, 50% 10%, 42% 65%, 35% 20%, 
+      28% 70%, 22% 15%, 15% 60%, 10% 25%, 5% 55%, 0% 30%
+    );
+    opacity: 0.7;
+    animation: glitchBottom 2.5s infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes glitchTop {
+    0%, 100% { transform: translateX(0); opacity: 0.7; }
+    20% { transform: translateX(-3px); opacity: 0.9; }
+    40% { transform: translateX(2px); opacity: 0.5; }
+    60% { transform: translateX(-1px); opacity: 0.8; }
+    80% { transform: translateX(3px); opacity: 0.6; }
+  }
+  
+  @keyframes glitchBottom {
+    0%, 100% { transform: translateX(0); opacity: 0.7; }
+    25% { transform: translateX(2px); opacity: 0.5; }
+    50% { transform: translateX(-3px); opacity: 0.9; }
+    75% { transform: translateX(1px); opacity: 0.6; }
+  }
+  
+  /* БИТЫЕ ПИКСЕЛИ */
+  .pixels-top {
+    position: absolute;
+    top: -50px;
+    left: -20px;
+    right: -20px;
+    height: 60px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .pixels-bottom {
+    position: absolute;
+    bottom: -50px;
+    left: -20px;
+    right: -20px;
+    height: 60px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .pixel {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
+    animation: pixelFlicker 0.3s infinite;
+  }
+  
+  .pixel.pink {
+    background: var(--secondary);
+    box-shadow: 0 0 8px var(--secondary);
+  }
+  
+  .pixel.big { width: 10px; height: 10px; }
+  .pixel.small { width: 3px; height: 3px; }
+  
+  @keyframes pixelFlicker {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
+  }
+  
+  /* РАЗЛОМЫ ПО БОКАМ */
+  .crack-line {
+    position: absolute;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+    z-index: 8;
+    pointer-events: none;
+    animation: crackPulse 2s infinite;
+  }
+  
+  .crack-line.pink {
+    background: var(--secondary);
+    box-shadow: 0 0 10px var(--secondary);
+  }
+  
+  @keyframes crackPulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+  }
+  
+  .avatar {
+    width: 130px; height: 130px;
+    border: 1px solid var(--secondary);
+    margin: 0 auto 25px;
+    overflow: hidden;
+    box-shadow: 0 0 15px var(--secondary), inset 0 0 15px rgba(255, 62, 165, 0.3);
+    animation: avatarPulse 2s infinite;
+    transform: translateZ(30px);
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @keyframes avatarPulse {
+    0%,100% { transform: translateZ(30px) scale(1); }
+    50% { transform: translateZ(30px) scale(1.05); }
+  }
+  
+  .name {
+    font-size: 42px; letter-spacing: 5px; margin-bottom: 8px;
+    text-shadow: 0 0 10px var(--primary);
+    animation: glitch 4s infinite;
+    transform: translateZ(40px);
+    min-height: 50px;
+  }
+  .name::after { content: '_'; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes glitch {
+    0%,90%,100% { text-shadow: 0 0 10px var(--primary); }
+    92% { text-shadow: -2px 0 var(--secondary), 2px 0 #00ffff; }
+    94% { text-shadow: 2px 0 var(--secondary), -2px 0 #00ffff; }
+    96% { text-shadow: -2px 0 var(--secondary), 2px 0 #00ffff; }
+  }
+  
+  .role {
+    font-size: 14px; color: var(--secondary); letter-spacing: 3px;
+    margin-bottom: 35px; text-shadow: 0 0 8px var(--secondary);
+    transform: translateZ(35px);
+  }
+  
+  .info {
+    text-align: left; font-size: 15px; line-height: 2;
+    margin-bottom: 30px; min-height: 100px;
+    transform: translateZ(25px);
+  }
+  .info span { color: var(--secondary); }
+  .info .line { opacity: 0; transition: opacity 0.3s; }
+  .info .line.show { opacity: 1; }
+  
+  .skills {
+    margin-bottom: 35px;
+    transform: translateZ(20px);
+  }
+  .skill { margin-bottom: 14px; text-align: left; }
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+  }
+  .skill-name { color: var(--primary); }
+  .skill-percent { color: var(--secondary); }
+  .skill-bar {
+    height: 7px;
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    overflow: hidden;
+    position: relative;
+  }
+  .skill-fill {
+    height: 100%;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+    width: 0;
+    transition: width 1.5s ease-out;
+    position: relative;
+  }
+  .skill-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: white;
+    box-shadow: 0 0 8px white;
+    animation: skillPulse 1s infinite;
+  }
+  @keyframes skillPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  
+  .btn {
+    display: block; width: 100%; padding: 16px;
+    margin-bottom: 12px;
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-family: inherit; font-size: 15px;
+    letter-spacing: 2px; text-decoration: none;
+    transition: 0.2s; cursor: pointer;
+    position: relative; overflow: hidden;
+    transform: translateZ(20px);
+  }
+  .btn::before {
+    content: ''; position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,255,157,0.3), transparent);
+    transition: 0.5s;
+  }
+  .btn:hover::before { left: 100%; }
+  .btn:hover {
+    background: rgba(0, 255, 157, 0.1);
+    box-shadow: 0 0 15px var(--primary);
+    text-shadow: 0 0 5px var(--primary);
+    transform: translateZ(35px);
+  }
+  .btn.pink { border-color: var(--secondary); color: var(--secondary); }
+  .btn.pink:hover {
+    background: rgba(255, 62, 165, 0.1);
+    box-shadow: 0 0 15px var(--secondary);
+    text-shadow: 0 0 5px var(--secondary);
+  }
+  .btn.pink::before {
+    background: linear-gradient(90deg, transparent, rgba(255,62,165,0.3), transparent);
+  }
+  .contact { font-size: 12px; opacity: 0.7; margin-top: 5px; letter-spacing: 1px; }
+  .footer {
+    margin-top: 30px; font-size: 12px; opacity: 0.5;
+    letter-spacing: 1px; transform: translateZ(15px);
+  }
+  
+  .toast {
+    position: fixed;
+    top: 30px; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 15px 25px;
+    font-size: 13px; letter-spacing: 2px;
+    box-shadow: 0 0 20px var(--primary);
+    z-index: 100;
+    transition: transform 0.4s;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  
+  /* ПЛЕЕР */
+  .player {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    z-index: 50;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid var(--primary);
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+    color: var(--primary);
+    font-size: 12px; letter-spacing: 1px;
+    opacity: 0;
+    animation: cardAppear 1s 4.1s forwards;
+  }
+  .player-btn {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    width: 32px; height: 32px;
+    cursor: pointer; font-family: inherit; font-size: 14px;
+    transition: 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-btn:hover {
+    background: var(--primary); color: var(--bg);
+    box-shadow: 0 0 10px var(--primary);
+  }
+  .equalizer { display: flex; gap: 3px; align-items: flex-end; height: 20px; }
+  .eq-bar {
+    width: 3px; background: var(--primary); height: 5px;
+    box-shadow: 0 0 5px var(--primary);
+  }
+  .player.playing .eq-bar { animation: eq 0.8s infinite ease-in-out; }
+  .player.playing .eq-bar:nth-child(1) { animation-delay: 0.0s; }
+  .player.playing .eq-bar:nth-child(2) { animation-delay: 0.2s; }
+  .player.playing .eq-bar:nth-child(3) { animation-delay: 0.4s; }
+  .player.playing .eq-bar:nth-child(4) { animation-delay: 0.1s; }
+  @keyframes eq { 0%,100% { height: 5px; } 50% { height: 20px; } }
+  .volume {
+    width: 60px; -webkit-appearance: none; appearance: none;
+    height: 3px; background: var(--primary); outline: none;
+    opacity: 0.7; cursor: pointer;
+  }
+  .volume::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 10px; background: var(--secondary);
+    cursor: pointer; box-shadow: 0 0 5px var(--secondary);
+    border-radius: 0;
+  }
+  
+  /* ТЕРМИНАЛ */
+  .terminal-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 55;
+    background: var(--bg);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--primary);
+    opacity: 0;
+    animation: cardAppear 1s 4.2s forwards;
+  }
+  .terminal-toggle:hover {
+    background: var(--primary);
+    color: var(--bg);
+  }
+  
+  .terminal {
+    position: fixed;
+    bottom: -500px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 700px;
+    height: 400px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
+    z-index: 200;
+    transition: bottom 0.4s ease-out;
+    display: flex;
+    flex-direction: column;
+  }
+  .terminal.open { bottom: 20px; }
+  
+  .terminal-header {
+    padding: 10px 15px;
+    background: rgba(0, 255, 157, 0.1);
+    border-bottom: 1px solid var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+  .terminal-close {
+    cursor: pointer;
+    color: var(--secondary);
+    font-size: 16px;
+    padding: 0 8px;
+  }
+  .terminal-body {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--primary);
+  }
+  .terminal-body::-webkit-scrollbar { width: 6px; }
+  .terminal-body::-webkit-scrollbar-thumb { background: var(--primary); }
+  .terminal-body::-webkit-scrollbar-track { background: rgba(0,255,157,0.1); }
+  
+  .term-line { margin-bottom: 3px; word-wrap: break-word; }
+  .term-line .prompt { color: var(--secondary); }
+  .term-line .cmd { color: white; }
+  .term-line.error { color: #ff5555; }
+  .term-line.warn { color: #ffaa00; }
+  .term-line.success { color: var(--primary); }
+  
+  .terminal-input-line {
+    padding: 10px 15px;
+    border-top: 1px solid rgba(0, 255, 157, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .terminal-prompt { color: var(--secondary); font-size: 13px; }
+  .terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 13px;
+    caret-color: var(--secondary);
+  }
+  
+  @media (max-width: 800px) {
+    .card { padding: 35px 25px; max-width: 100%; }
+    .name { font-size: 28px; letter-spacing: 3px; }
+    .avatar { width: 100px; height: 100px; }
+    .clock-widget, .geo-widget { padding: 8px 12px; min-width: 140px; font-size: 10px; }
+    .clock-time { font-size: 18px; }
+    .clock-widget { top: 10px; left: 10px; }
+    .geo-widget { top: 10px; right: 10px; }
+    .player { padding: 6px 10px; gap: 6px; }
+    .volume { width: 35px; }
+    .theme-switcher { padding: 8px; }
+    .boot-screen { padding: 20px 25px; font-size: 11px; }
+    .terminal { width: 95%; height: 60vh; }
+    .terminal-toggle { font-size: 10px; padding: 8px 14px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- BOOT -->
+  <div class="boot-screen" id="bootScreen">
+    <div class="boot-line" id="boot1">&gt; INITIALIZING SYSTEM...</div>
+    <div class="boot-line" id="boot2">&gt; LOADING KERNEL v2.0.4... <span style="color:#00ff9d">[OK]</span></div>
+    <div class="boot-line" id="boot3">&gt; ESTABLISHING SECURE CONNECTION...</div>
+    <div class="boot-line warn" id="boot4">&gt; WARNING: FIREWALL DETECTED</div>
+    <div class="boot-line" id="boot5">&gt; BYPASSING FIREWALL...</div>
+    <div class="boot-line" id="boot6" style="color:#00ff9d">&gt; FIREWALL BYPASSED [OK]</div>
+    <div class="boot-line" id="boot7">&gt; DECRYPTING USER DATA...</div>
+    <div class="boot-line error" id="boot8">&gt; INJECTING NEON PROTOCOL...</div>
+    <div class="boot-line" id="boot9" style="color:#00ff9d">&gt; ACCESS GRANTED ✓</div>
+    <div class="boot-line" id="boot10">&gt; WELCOME, MrNeko<span class="boot-cursor">_</span></div>
+    <div class="boot-progress" id="bootProgress"><div class="boot-progress-bar"></div></div>
+  </div>
+
+  <canvas id="matrix"></canvas>
+  <canvas id="particles"></canvas>
+  
+  <!-- ЧАСЫ -->
+  <div class="clock-widget">
+    <div class="clock-header"><div class="clock-dot"></div>SYS_TIME</div>
+    <div class="clock-time" id="clockTime">00<span class="sep">:</span>00<span class="sep">:</span>00</div>
+    <div class="clock-date" id="clockDate">--/--/----</div>
+    <div class="clock-uptime" id="clockUptime">&gt; UPTIME: 00:00:00</div>
+  </div>
+  
+  <!-- GEO -->
+  <div class="geo-widget">
+    <div class="geo-header"><div class="clock-dot"></div>USER_DATA</div>
+    <div class="geo-item"><span>&gt;</span> ip: <span id="geoIp">loading...</span></div>
+    <div class="geo-item"><span>&gt;</span> loc: <span id="geoLoc">loading...</span></div>
+    <div class="geo-item"><span>&gt;</span> isp: <span id="geoIsp">loading...</span></div>
+    <div class="geo-item"><span>&gt;</span> weather: <span id="geoWeather">loading...</span></div>
+    <div class="geo-item"><span>&gt;</span> browser: <span id="geoBrowser">-</span></div>
+  </div>
+  
+  <!-- ТЕМЫ -->
+  <div class="theme-switcher">
+    <span class="theme-label">THEME:</span>
+    <div class="theme-btn active" style="background:#00ff9d" onclick="setTheme('#00ff9d','#ff3ea5')" title="Neon Green"></div>
+    <div class="theme-btn" style="background:#ff3ea5" onclick="setTheme('#ff3ea5','#00ffff')" title="Pink"></div>
+    <div class="theme-btn" style="background:#00ffff" onclick="setTheme('#00ffff','#ff00ff')" title="Cyan"></div>
+    <div class="theme-btn" style="background:#ff00ff" onclick="setTheme('#ff00ff','#00ff9d')" title="Purple"></div>
+    <div class="theme-btn" style="background:#ff5555" onclick="setTheme('#ff5555','#ffaa00')" title="Red"></div>
+    <div class="theme-btn" style="background:#ffaa00" onclick="setTheme('#ffaa00','#00ff9d')" title="Orange"></div>
+  </div>
+  
+  <div class="toast" id="toast">&gt; NICKNAME_COPIED ✓</div>
+  
+  <!-- КАРТОЧКА С ПРОБИТОЙ СТЕНОЙ -->
+  <div class="card-wrapper" id="cardWrapper">
+    <div class="broken-wrapper">
+      
+      <!-- Битые пиксели сверху -->
+      <div class="pixels-top" id="pixelsTop"></div>
+      
+      <!-- Разломы по бокам -->
+      <div class="crack-line" style="top:15%; left:-25px; width:20px; height:2px;"></div>
+      <div class="crack-line pink" style="top:30%; right:-30px; width:25px; height:2px;"></div>
+      <div class="crack-line" style="top:45%; left:-20px; width:15px; height:2px;"></div>
+      <div class="crack-line pink" style="top:60%; right:-25px; width:20px; height:2px;"></div>
+      <div class="crack-line" style="top:75%; left:-30px; width:25px; height:2px;"></div>
+      <div class="crack-line pink" style="top:20%; right:-18px; width:14px; height:1px;"></div>
+      <div class="crack-line" style="top:55%; right:-22px; width:18px; height:1px;"></div>
+      <div class="crack-line pink" style="top:85%; left:-18px; width:14px; height:1px;"></div>
+      
+      <div class="card" id="card">
+        <div class="avatar"><img src="avatar.jpg" alt="MrNeko"></div>
+        <div class="name" id="nameText"></div>
+        <div class="role">// CODER</div>
+        
+        <div class="info" id="info">
+          <div class="line"><span>&gt;</span> status: <span style="color:var(--primary)">online</span></div>
+          <div class="line"><span>&gt;</span> mode: web_dev</div>
+          <div class="line"><span>&gt;</span> access: <span style="color:var(--primary)">granted</span></div>
+        </div>
+        
+        <div class="skills">
+          <div class="skill">
+            <div class="skill-header"><span class="skill-name">HTML</span><span class="skill-percent">95%</span></div>
+            <div class="skill-bar"><div class="skill-fill" data-percent="95"></div></div>
+          </div>
+          <div class="skill">
+            <div class="skill-header"><span class="skill-name">CSS</span><span class="skill-percent">88%</span></div>
+            <div class="skill-bar"><div class="skill-fill" data-percent="88"></div></div>
+          </div>
+          <div class="skill">
+            <div class="skill-header"><span class="skill-name">JAVASCRIPT</span><span class="skill-percent">75%</span></div>
+            <div class="skill-bar"><div class="skill-fill" data-percent="75"></div></div>
+          </div>
+          <div class="skill">
+            <div class="skill-header"><span class="skill-name">PYTHON</span><span class="skill-percent">65%</span></div>
+            <div class="skill-bar"><div class="skill-fill" data-percent="65"></div></div>
+          </div>
+        </div>
+        
+        <a href="https://t.me/MrLololoshkaxxl" class="btn pink" target="_blank">
+          &gt; TELEGRAM
+          <div class="contact">@MrLololoshkaxxl</div>
+        </a>
+        <a href="https://discord.com/users/1426643860972507237" class="btn" target="_blank" onclick="copyNick()">
+          &gt; DISCORD
+          <div class="contact">mr.lololoshka_1_47773</div>
+        </a>
+        
+        <div class="footer">[ ENCRYPTED // NEON_v2.0 ]</div>
+      </div>
+      
+      <!-- Битые пиксели снизу -->
+      <div class="pixels-bottom" id="pixelsBottom"></div>
+      
+    </div>
+  </div>
+  
+  <!-- ТЕРМИНАЛ -->
+  <button class="terminal-toggle" onclick="toggleTerminal()">&gt; OPEN TERMINAL</button>
+  
+  <div class="terminal" id="terminal">
+    <div class="terminal-header">
+      <span>root@mrneko:~$ terminal_v2.0</span>
+      <span class="terminal-close" onclick="toggleTerminal()">✕</span>
+    </div>
+    <div class="terminal-body" id="terminalBody">
+      <div class="term-line success">Welcome to MrNeko Terminal v2.0</div>
+      <div class="term-line">Type <span style="color:#ff3ea5">'help'</span> to see available commands.</div>
+      <div class="term-line">&nbsp;</div>
+    </div>
+    <div class="terminal-input-line">
+      <span class="terminal-prompt">root@mrneko:~$</span>
+      <input type="text" class="terminal-input" id="terminalInput" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+  
+  <audio id="bgMusic" src="music.mp3" loop></audio>
+  
+  <div class="player" id="player">
+    <button class="player-btn" onclick="toggleMusic()" id="playBtn">▶</button>
+    <div class="equalizer">
+      <div class="eq-bar"></div><div class="eq-bar"></div>
+      <div class="eq-bar"></div><div class="eq-bar"></div>
+    </div>
+    <span>MUSIC</span>
+    <input type="range" class="volume" min="0" max="100" value="50" oninput="setVolume(this.value)">
+  </div>
+
+<script>
+  // ==== ГЕНЕРАЦИЯ БИТЫХ ПИКСЕЛЕЙ ====
+  function generatePixels(container, count) {
+    const el = document.getElementById(container);
+    if (!el) return;
+    for (let i = 0; i < count; i++) {
+      const pixel = document.createElement('div');
+      pixel.className = 'pixel';
+      if (Math.random() > 0.5) pixel.classList.add('pink');
+      const sizeRand = Math.random();
+      if (sizeRand > 0.7) pixel.classList.add('big');
+      else if (sizeRand < 0.3) pixel.classList.add('small');
+      pixel.style.left = Math.random() * 100 + '%';
+      pixel.style.top = Math.random() * 100 + '%';
+      pixel.style.animationDelay = Math.random() * 2 + 's';
+      pixel.style.animationDuration = (0.2 + Math.random() * 0.5) + 's';
+      el.appendChild(pixel);
+    }
+  }
+  setTimeout(() => {
+    generatePixels('pixelsTop', 50);
+    generatePixels('pixelsBottom', 50);
+  }, 3600);
+  
+  // ==== ЧАСЫ ====
+  const startTime = Date.now();
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clockTime').innerHTML = `${h}<span class="sep">:</span>${m}<span class="sep">:</span>${s}`;
+    const day = String(now.getDate()).padStart(2,'0');
+    const month = String(now.getMonth()+1).padStart(2,'0');
+    const weekday = ['SUN','MON','TUE','WED','THU','FRI','SAT'][now.getDay()];
+    document.getElementById('clockDate').textContent = `${weekday} · ${day}.${month}.${now.getFullYear()}`;
+    const elapsed = Math.floor((Date.now()-startTime)/1000);
+    const uH = String(Math.floor(elapsed/3600)).padStart(2,'0');
+    const uM = String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
+    const uS = String(elapsed%60).padStart(2,'0');
+    document.getElementById('clockUptime').textContent = `> UPTIME: ${uH}:${uM}:${uS}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+  
+  // ==== GEO/IP/WEATHER ====
+  let userGeo = {};
+  fetch('https://ipapi.co/json/')
+    .then(r => r.json())
+    .then(data => {
+      userGeo = data;
+      document.getElementById('geoIp').textContent = data.ip || 'hidden';
+      document.getElementById('geoLoc').textContent = `${data.city || '?'}, ${data.country_code || '?'}`;
+      document.getElementById('geoIsp').textContent = (data.org || 'unknown').substring(0, 25);
+      if (data.latitude && data.longitude) {
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data.latitude}&longitude=${data.longitude}&current_weather=true`)
+          .then(r => r.json())
+          .then(w => {
+            const t = Math.round(w.current_weather.temperature);
+            const codes = {0:'clear',1:'clear',2:'cloudy',3:'overcast',45:'fog',51:'drizzle',61:'rain',71:'snow',95:'storm'};
+            const cond = codes[w.current_weather.weathercode] || 'unknown';
+            document.getElementById('geoWeather').textContent = `${t}°C, ${cond}`;
+          })
+          .catch(() => document.getElementById('geoWeather').textContent = 'offline');
+      }
+    })
+    .catch(() => {
+      document.getElementById('geoIp').textContent = 'blocked';
+      document.getElementById('geoLoc').textContent = 'unknown';
+      document.getElementById('geoIsp').textContent = 'unknown';
+      document.getElementById('geoWeather').textContent = 'offline';
+    });
+  
+  const ua = navigator.userAgent;
+  let browser = 'unknown';
+  if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Edg')) browser = 'Edge';
+  else if (ua.includes('Chrome')) browser = 'Chrome';
+  else if (ua.includes('Safari')) browser = 'Safari';
+  document.getElementById('geoBrowser').textContent = browser;
+  
+  // ==== СМЕНА ТЕМЫ ====
+  function setTheme(primary, secondary) {
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--secondary', secondary);
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  
+  // ==== КЛИК-ЧАСТИЦЫ ====
+  const partCanvas = document.getElementById('particles');
+  const partCtx = partCanvas.getContext('2d');
+  partCanvas.width = window.innerWidth;
+  partCanvas.height = window.innerHeight;
+  const particles = [];
+  
+  document.addEventListener('click', (e) => {
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: e.clientX, y: e.clientY,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        life: 60,
+        color: Math.random() > 0.5 
+          ? getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
+          : getComputedStyle(document.documentElement).getPropertyValue('--secondary').trim()
+      });
+    }
+  });
+  
+  function animateParticles() {
+    partCtx.clearRect(0, 0, partCanvas.width, partCanvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.15; p.life--;
+      partCtx.fillStyle = p.color;
+      partCtx.shadowBlur = 10;
+      partCtx.shadowColor = p.color;
+      partCtx.fillRect(p.x, p.y, 3, 3);
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+    partCtx.shadowBlur = 0;
+    requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+  
+  // ==== ТЕРМИНАЛ ====
+  const terminal = document.getElementById('terminal');
+  const termBody = document.getElementById('terminalBody');
+  const termInput = document.getElementById('terminalInput');
+  
+  function toggleTerminal() {
+    terminal.classList.toggle('open');
+    if (terminal.classList.contains('open')) termInput.focus();
+  }
+  
+  function addTermLine(text, cls = '') {
+    const line = document.createElement('div');
+    line.className = 'term-line ' + cls;
+    line.innerHTML = text;
+    termBody.appendChild(line);
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+  
+  const commands = {
+    help: () => {
+      addTermLine('<span style="color:#ff3ea5">Available commands:</span>');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">help</span>     - show this menu');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">about</span>    - about me');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">skills</span>   - my skills');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">contact</span>  - my contacts');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">whoami</span>   - your data');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">date</span>     - current date/time');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">hack</span>     - start hacking simulation');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">matrix</span>   - toggle matrix effect');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">theme</span>    - random theme');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">joke</span>     - random dev joke');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">clear</span>    - clear terminal');
+      addTermLine('&nbsp;&nbsp;<span style="color:#00ff9d">exit</span>     - close terminal');
+    },
+    about: () => {
+      addTermLine('<span style="color:#ff3ea5">╔═══════════════════════╗</span>');
+      addTermLine('<span style="color:#ff3ea5">║</span> Name: <span style="color:white">MrNeko</span>');
+      addTermLine('<span style="color:#ff3ea5">║</span> Role: <span style="color:white">Web Developer</span>');
+      addTermLine('<span style="color:#ff3ea5">║</span> Focus: <span style="color:white">Frontend / Design</span>');
+      addTermLine('<span style="color:#ff3ea5">║</span> Status: <span style="color:#00ff9d">Online</span>');
+      addTermLine('<span style="color:#ff3ea5">╚═══════════════════════╝</span>');
+    },
+    skills: () => {
+      addTermLine('<span style="color:#ff3ea5">My skills:</span>');
+      addTermLine('HTML       [██████████████████░] 95%');
+      addTermLine('CSS        [█████████████████░░] 88%');
+      addTermLine('JavaScript [██████████████░░░░░] 75%');
+      addTermLine('Python     [████████████░░░░░░░] 65%');
+    },
+    contact: () => {
+      addTermLine('<span style="color:#ff3ea5">Contact:</span>');
+      addTermLine('&nbsp;&nbsp;Telegram: <span style="color:white">@MrLololoshkaxxl</span>');
+      addTermLine('&nbsp;&nbsp;Discord: <span style="color:white">mr.lololoshka_1_47773</span>');
+    },
+    social: () => commands.contact(),
+    whoami: () => {
+      addTermLine('<span style="color:#ff3ea5">Your data:</span>');
+      addTermLine(`&nbsp;&nbsp;IP: <span style="color:white">${userGeo.ip || 'hidden'}</span>`);
+      addTermLine(`&nbsp;&nbsp;Location: <span style="color:white">${userGeo.city || '?'}, ${userGeo.country_name || '?'}</span>`);
+      addTermLine(`&nbsp;&nbsp;ISP: <span style="color:white">${userGeo.org || 'unknown'}</span>`);
+      addTermLine(`&nbsp;&nbsp;Browser: <span style="color:white">${browser}</span>`);
+      addTermLine(`&nbsp;&nbsp;Screen: <span style="color:white">${window.innerWidth}x${window.innerHeight}</span>`);
+    },
+    date: () => addTermLine(`<span style="color:white">${new Date().toString()}</span>`),
+    hack: () => {
+      const steps = [
+        '> Initializing hack.exe...',
+        '> Scanning target...',
+        '> Bypassing security layer 1... [OK]',
+        '> Bypassing security layer 2... [OK]',
+        '> Bypassing security layer 3... [OK]',
+        '> Cracking password: ▓▓▓▓▓▓▓▓',
+        '> Extracting data...',
+        '> HACK COMPLETE! 😎'
+      ];
+      steps.forEach((s, i) => {
+        setTimeout(() => addTermLine(s, i === steps.length-1 ? 'success' : ''), i * 400);
+      });
+    },
+    matrix: () => {
+      const canvas = document.getElementById('matrix');
+      canvas.style.opacity = canvas.style.opacity === '0.6' ? '0.25' : '0.6';
+      addTermLine('Matrix intensity toggled', 'success');
+    },
+    theme: () => {
+      const themes = [['#00ff9d','#ff3ea5'],['#ff3ea5','#00ffff'],['#00ffff','#ff00ff'],['#ff00ff','#00ff9d'],['#ff5555','#ffaa00']];
+      const t = themes[Math.floor(Math.random() * themes.length)];
+      document.documentElement.style.setProperty('--primary', t[0]);
+      document.documentElement.style.setProperty('--secondary', t[1]);
+      addTermLine(`Theme changed to ${t[0]}`, 'success');
+    },
+    joke: () => {
+      const jokes = [
+        'Why do programmers prefer dark mode? Because light attracts bugs.',
+        'There are 10 types of people: those who understand binary and those who dont.',
+        '!false — its funny because its true.',
+        'A SQL query walks into a bar, sees two tables and asks: can I join you?',
+        'Why do Java developers wear glasses? Because they dont C#.',
+        '99 little bugs in the code, 99 little bugs, take one down, patch it around, 127 little bugs in the code...'
+      ];
+      addTermLine(`<span style="color:white">${jokes[Math.floor(Math.random()*jokes.length)]}</span>`);
+    },
+    clear: () => { termBody.innerHTML = ''; },
+    exit: () => toggleTerminal(),
+    ls: () => addTermLine('avatar.png  index.html  music.mp3  secrets.txt'),
+    cat: (arg) => {
+      if (arg === 'secrets.txt') addTermLine('<span style="color:#ff3ea5">You found the easter egg! 🥚</span>', 'success');
+      else addTermLine(`cat: ${arg || 'file'}: No such file`, 'error');
+    },
+    sudo: () => addTermLine('Nice try 😏', 'error'),
+    rm: () => addTermLine('Permission denied', 'error')
+  };
+  
+  termInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const input = termInput.value.trim();
+      if (!input) return;
+      addTermLine(`<span class="prompt">root@mrneko:~$</span> <span class="cmd">${input}</span>`);
+      const [cmd, ...args] = input.toLowerCase().split(' ');
+      if (commands[cmd]) commands[cmd](args.join(' '));
+      else addTermLine(`Command not found: ${cmd}. Type 'help' for commands.`, 'error');
+      termInput.value = '';
+    }
+  });
+  
+  // ==== BOOT ====
+  const bootLines = [
+    {id:'boot1',delay:0},{id:'boot2',delay:300},{id:'boot3',delay:600},
+    {id:'boot4',delay:900},{id:'boot5',delay:1200},{id:'boot6',delay:1700},
+    {id:'boot7',delay:2000},{id:'boot8',delay:2300},{id:'boot9',delay:2700},
+    {id:'boot10',delay:3000}
+  ];
+  bootLines.forEach(l => setTimeout(() => document.getElementById(l.id).classList.add('show'), l.delay));
+  setTimeout(() => document.getElementById('bootProgress').classList.add('show'), 200);
+  setTimeout(() => document.getElementById('bootScreen').classList.add('hide'), 3500);
+  
+  // ==== ИМЯ ====
+  const nameText = document.getElementById('nameText');
+  const fullName = 'MrNeko';
+  let nameIndex = 0;
+  setTimeout(() => {
+    const typeName = setInterval(() => {
+      if (nameIndex < fullName.length) {
+        nameText.textContent = fullName.substring(0, nameIndex + 1);
+        nameIndex++;
+      } else clearInterval(typeName);
+    }, 150);
+  }, 4000);
+  
+  // ==== 3D НАКЛОН ====
+  const cardWrapper = document.getElementById('cardWrapper');
+  const card = document.getElementById('card');
+  document.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const cX = rect.left + rect.width/2;
+    const cY = rect.top + rect.height/2;
+    const rY = ((e.clientX - cX) / rect.width) * 10;
+    const rX = ((cY - e.clientY) / rect.height) * 10;
+    cardWrapper.style.transform = `rotateY(${rY}deg) rotateX(${rX}deg)`;
+  });
+  document.addEventListener('mouseleave', () => {
+    cardWrapper.style.transform = 'rotateY(0) rotateX(0)';
+  });
+  
+  // ==== МАТРИЦА ====
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const chars = '01アイウエオカキクケコサシスセソタチツテト+-*/=<>[]{}';
+  const fontSize = 14;
+  const drops = Array(Math.floor(canvas.width / fontSize)).fill(1);
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+    ctx.font = fontSize + 'px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 50);
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    partCanvas.width = window.innerWidth;
+    partCanvas.height = window.innerHeight;
+  });
+  
+  // ==== INFO + SKILLS ====
+  setTimeout(() => {
+    document.querySelectorAll('.info .line').forEach((line, i) => {
+      setTimeout(() => line.classList.add('show'), 400 * (i + 1));
+    });
+    setTimeout(() => {
+      document.querySelectorAll('.skill-fill').forEach(bar => {
+        bar.style.width = bar.dataset.percent + '%';
+      });
+    }, 1500);
+  }, 4500);
+  
+  function copyNick() {
+    navigator.clipboard.writeText('mr.lololoshka_1_47773').then(() => {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    });
+  }
+  
+  // ==== МУЗЫКА ====
+  const music = document.getElementById('bgMusic');
+  const player = document.getElementById('player');
+  const playBtn = document.getElementById('playBtn');
+  music.volume = 0.5;
+  function toggleMusic() {
+    if (music.paused) {
+      music.play();
+      playBtn.textContent = '⏸';
+      player.classList.add('playing');
+    } else {
+      music.pause();
+      playBtn.textContent = '▶';
+      player.classList.remove('playing');
+    }
+  }
+  function setVolume(val) { music.volume = val / 100; }
+  document.body.addEventListener('click', function autoPlay() {
+    if (music.paused) {
+      music.play().then(() => {
+        playBtn.textContent = '⏸';
+        player.classList.add('playing');
+      }).catch(() => {});
+    }
+    document.body.removeEventListener('click', autoPlay);
+  }, { once: true });
+</script>
+</body>
+</html>
